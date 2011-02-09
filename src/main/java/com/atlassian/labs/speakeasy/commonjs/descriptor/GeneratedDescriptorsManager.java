@@ -244,6 +244,12 @@ class GeneratedDescriptorsManager
         trans = cssTrans.addElement("transformer");
         trans.addAttribute("key", "cssVariables");
 
+        Element lessTrans = root.addElement("transformation");
+        lessTrans.addAttribute("extension", "less");
+        trans = lessTrans.addElement("transformer");
+        trans.addAttribute("key", "lessTransformer");
+        trans.addAttribute("selfModule", descriptor.getPluginKey());
+
         webResourceModuleDescriptor.init(dummyPlugin,
                 createDescriptorElement(descriptor.getKey() + "-modules", root));
         return pluginBundle.getBundleContext().registerService(ModuleDescriptor.class.getName(), webResourceModuleDescriptor, null);

@@ -1,0 +1,2 @@
+the "lib" directory from https://github.com/cloudhead/less.js.git
+versionb 1.0.41 = b7fb09fed7f269510b4a6be6f6075683007f1338
