@@ -12,22 +12,37 @@ var require;
         throw "Attempt to require module other than 'less/tree': " + arg;
     };
 
-    var ourImporter = function (path, paths, callback, env) {
-        java.lang.System.out.println("QQQQ " + env.relpath + " " + path );
+    var ourImporter = function (path, paths, callback, env)
+    {
         path = env.relpath + path;
+        // TODO we should really resolve .. etc in path so that alreadySeen works
 
         var match = /^(.*\/)([^/]+)?$/.exec(path); // basename of path becomes new relpath
         var newrelpath = match ? match[1] : "";
-        java.lang.System.out.println("RRRR " + path + " " + newrelpath);
-        var data = env.ourLoader.load(path) + ""; // converts to native string
+
+        var data;
+        if (env.alreadySeen[path]) {
+            data = "/* skipping already included " + path + " */\n";
+        } else {
+            env.alreadySeen[path] = true;
+            data = env.ourLoader.load(path);
+            data = data + ""; // converts to proper native string
+        }
+
         var newenv = {
             ourLoader: env.ourLoader,
-            relpath: newrelpath
+            relpath: newrelpath,
+            alreadySeen: env.alreadySeen,
+            filename: path
         };
+
+
         var parser = new exports.Parser(newenv);
-        parser.parse(data, function(e, root) {
-            if (e) {
-                java.lang.System.out.println("ERROR " + e);
+        parser.parse(data, function(e, root)
+        {
+            if (e)
+            {
+                java.lang.System.out.println("ERROR " + e); // TODO log better
             }
             callback(root);
         });
@@ -38,16 +53,19 @@ var require;
             exports.Parser.importer = ourImporter;
         }
 
+        var alreadySeen = {};
         var env = {
             ourLoader: loader,
-            relpath: "" // blank or ends in a slash
+            relpath: "", // blank or ends in a slash
+            filename: "<rootfile>",
+            alreadySeen: alreadySeen
         };
         var parser = new exports.Parser(env);
 
         var result;
         parser.parse(css, function (e, root) {
             if (e) {
-                java.lang.System.out.println("ERROR " + e);
+                java.lang.System.out.println("ERROR " + e); // TODO log better
             }
             result = root.toCSS({compress: compress});
         });

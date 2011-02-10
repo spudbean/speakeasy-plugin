@@ -1,8 +1,14 @@
+@basepath: ".";
+
 @import "lib.less";
 
 @color1: #111111;
 
 #header {
+  background: url('1.png');
+  @png: %('%s/1.png', @basepath);
+  background: url(@png);
+  background: url('lib2/2.png');
   color: @color1;
 }
 h2 {
@@ -12,5 +18,9 @@ h3 {
   color: @color3;
 }
 h4 {
+  @png: %('%s/2.png', @basepath);
+  background: url(@png);
   color: @color4;
 }
+
+@import "lib2/foolib.less";

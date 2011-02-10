@@ -14,6 +14,7 @@ import org.dom4j.Element;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Function;
+import org.mozilla.javascript.RhinoException;
 import org.mozilla.javascript.ScriptableObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,6 +105,11 @@ public class LessTransformer implements WebResourceTransformer
                 final Object result = runLessRun.call(cx, topScope, topScope, args);
 
                 return Context.toString(result);
+            }
+            catch (RhinoException e)
+            {
+                log.info("Error from rhino engine:", e); // TODO can we get a "json" version of e.getValue()?
+                throw e;
             }
             finally
             {
