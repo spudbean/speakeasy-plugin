@@ -48,9 +48,20 @@ var require;
         });
     };
 
+    var firstrun = true;
+
     runLessRun = function(loader, css, compress) {
-        if (typeof exports.Parser.importer == "undefined") {
+        if (firstrun) {
+            firstrun = false;
+
             exports.Parser.importer = ourImporter;
+
+            tree.JavaScript.prototype.toCSS = tree.JavaScript.prototype.eval = function () {
+                throw { message: "JavaScript evaluation in Less is disabled",
+                    index: this.index };
+            };
+
+//            tree.functions.spud = function(a) { return new(tree.Anonymous)(a.toSource())}; // example custom function
         }
 
         var alreadySeen = {};

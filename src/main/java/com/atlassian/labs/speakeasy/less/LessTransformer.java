@@ -14,7 +14,9 @@ import org.dom4j.Element;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Function;
+import org.mozilla.javascript.JavaScriptException;
 import org.mozilla.javascript.RhinoException;
+import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,25 +98,42 @@ public class LessTransformer implements WebResourceTransformer
             try
             {
                 final ScriptableObject topScope = cx.initStandardObjects();
-                cx.setOptimizationLevel(9);
-                loadjs(topScope, cx, "setup-env.js");
-                loadjs(topScope, cx, "less-concat.js");
+                try
+                {
+                    cx.setOptimizationLevel(9);
+                    loadjs(topScope, cx, "setup-env.js");
+                    loadjs(topScope, cx, "less-concat.js");
 
-                final Function runLessRun = (Function) topScope.get("runLessRun", topScope);
-                final Object[] args = { new Loader(), input, compress };
-                final Object result = runLessRun.call(cx, topScope, topScope, args);
+                    final Function runLessRun = (Function) topScope.get("runLessRun", topScope);
+                    final Object[] args = { new Loader(), input, compress };
+                    final Object result = runLessRun.call(cx, topScope, topScope, args);
 
-                return Context.toString(result);
-            }
-            catch (RhinoException e)
-            {
-                log.info("Error from rhino engine:", e); // TODO can we get a "json" version of e.getValue()?
-                throw e;
+                    return Context.toString(result);
+                }
+                catch (JavaScriptException e)
+                {
+                    throw new RuntimeException(debugJsObject(cx, topScope, e.getValue()), e);
+                }
             }
             finally
             {
                 Context.exit();
             }
+        }
+
+        private String debugJsObject(Context cx, ScriptableObject scope, Object value)
+        {
+            if (value instanceof Scriptable) {
+                Scriptable obj = (Scriptable)value;
+                if (ScriptableObject.hasProperty(obj, "toSource")) {
+                    Object v = ScriptableObject.getProperty(obj, "toSource");
+                    if (v instanceof Function) {
+                        Function f = (Function)v;
+                        return String.valueOf(f.call(cx, scope, obj, new Object[0]));
+                    }
+                }
+            }
+            return String.valueOf(value);
         }
 
 
